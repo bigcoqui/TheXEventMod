@@ -8,7 +8,6 @@ import flixel.math.FlxAngle;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
-import flixel.system.FlxAssets;
 import flixel.graphics.FlxGraphic;
 import flixel.util.FlxDestroyUtil;
 import flixel.graphics.frames.FlxAtlasFrames;
@@ -18,18 +17,10 @@ import openfl.utils.Assets;
  * A virtual thumbstick - useful for input on mobile devices.
  *
  * @author Ka Wing Chin
-   Modified By El Trusted
+ * @modification's authors: El Trusted and Saw (M.A. Jigsaw) to work only with touch and to use custom assets
  */
-
- //@:keep @:bitmap("assets/preload/images/virtual-input.png")
-//class VGraphic extends BitmapData {}
- 
-//@:file("assets/preload/images/virtual-input.txt")
-//class VData extends #if (lime_legacy || nme) ByteArray #else ByteArrayData #end {}
-
 class FlxJoyStick extends FlxSpriteGroup
 {
-	public var __dir:String = '';
 	/**
 	 * Shows the current state of the button.
 	 */
@@ -53,7 +44,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	public var onDown:Void->Void;
 
 	/**
-	 * This function is called when the mouse goes over the button.
+	 * This function is called when the touch goes over the button.
 	 */
 	public var onOver:Void->Void;
 
@@ -68,12 +59,12 @@ class FlxJoyStick extends FlxSpriteGroup
 	static inline var NORMAL:Int = 0;
 
 	/**
-	 * Used with public variable status, means highlighted (usually from mouse over).
+	 * Used with public variable status, means highlighted (usually from touch over).
 	 */
 	static inline var HIGHLIGHT:Int = 1;
 
 	/**
-	 * Used with public variable status, means pressed (usually from mouse click).
+	 * Used with public variable status, means pressed (usually from touch click).
 	 */
 	static inline var PRESSED:Int = 2;
 
@@ -82,7 +73,6 @@ class FlxJoyStick extends FlxSpriteGroup
 	 */
 	static var _analogs:Array<FlxJoyStick> = [];
 
-	#if FLX_TOUCH
 	/**
 	 * The current pointer that's active on the analog.
 	 */
@@ -92,7 +82,6 @@ class FlxJoyStick extends FlxSpriteGroup
 	 * Helper array for checking touches
 	 */
 	var _tempTouches:Array<FlxTouch> = [];
-	#end
 
 	/**
 	 * The area which the joystick will react.
@@ -104,6 +93,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	 */
 	var _radius:Float = 0;
 
+	public var __dir:String = 'None';
 	public var _direction:Float = 0;
 	public var _amount:Float = 0;
 
@@ -113,18 +103,16 @@ class FlxJoyStick extends FlxSpriteGroup
 	var _ease:Float;
 
 	/**
-	 * Create a virtual thumbstick - useful for input on mobile devices.
+	 * Create a virtual thumbstick - useful for input on android devices.
 	 *
 	 * @param   X            The X-coordinate of the point in space.
 	 * @param   Y            The Y-coordinate of the point in space.
 	 * @param   Radius       The radius where the thumb can move. If 0, half the base's width will be used.
 	 * @param   Ease         Used to smoothly back thumb to center. Must be between 0 and (FlxG.updateFrameRate / 60).
-	 * @param   BaseGraphic  The graphic you want to display as base of the joystick.
-	 * @param   ThumbGraphic The graphic you want to display as thumb of the joystick.
 	 */
-	public function new(X:Float = 0, Y:Float = 0, Radius:Float = 0, Ease:Float = 0.25, ?BaseGraphic:FlxGraphicAsset, ?ThumbGraphic:FlxGraphicAsset)
+	public function new(X:Float = 0, Y:Float = 0, Radius:Float = 0, Ease:Float = 0.25)
 	{
-		super();
+		super(X, Y);
 
 		_radius = Radius;
 		_ease = FlxMath.bound(Ease, 0, 60 / FlxG.updateFramerate);
@@ -133,11 +121,9 @@ class FlxJoyStick extends FlxSpriteGroup
 
 		_point = FlxPoint.get();
 
-		createBase(BaseGraphic);
-		createThumb(ThumbGraphic);
-
-		x = X;
-		y = Y;
+		createBase();
+		createThumb();
+		createZone();
 
 		scrollFactor.set();
 		moves = false;
@@ -151,7 +137,7 @@ class FlxJoyStick extends FlxSpriteGroup
 		base = new FlxSprite(0,
 			0).loadGraphic(FlxGraphic.fromFrame(FlxAtlasFrames.fromSparrow(Assets.getBitmapData('assets/android/joystick.png'),
 				Assets.getText('assets/android/joystick.xml'))
-				.getByName('base')));//Saw (M.A. Jigsaw) load asset method 
+				.getByName('base')));
 		base.resetSizeFromFrame();
 		base.x += -base.width * 0.5;
 		base.y += -base.height * 0.5;
@@ -173,7 +159,7 @@ class FlxJoyStick extends FlxSpriteGroup
 		thumb = new FlxSprite(0,
 			0).loadGraphic(FlxGraphic.fromFrame(FlxAtlasFrames.fromSparrow(Assets.getBitmapData('assets/android/joystick.png'),
 				Assets.getText('assets/android/joystick.xml'))
-				.getByName('thumb')));//Saw (M.A. Jigsaw) load asset method 
+				.getByName('thumb')));
 		thumb.resetSizeFromFrame();
 		thumb.scrollFactor.set();
 		thumb.solid = false;
@@ -187,7 +173,7 @@ class FlxJoyStick extends FlxSpriteGroup
 
 	/**
 	 * Creates the touch zone. It's based on the size of the background.
-	 * The thumb will react when the mouse is in the zone.
+	 * The thumb will react when the touch is in the zone.
 	 */
 	public function createZone():Void
 	{
@@ -214,10 +200,8 @@ class FlxJoyStick extends FlxSpriteGroup
 		thumb = null;
 		base = null;
 
-		#if FLX_TOUCH
 		_currentTouch = null;
 		_tempTouches = null;
-		#end
 	}
 
 	/**
@@ -227,17 +211,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	{
 		var offAll:Bool = true;
 
-		#if FLX_MOUSE
-		_point.set(FlxG.mouse.screenX, FlxG.mouse.screenY);
-
-		if (!updateAnalog(_point, FlxG.mouse.pressed, FlxG.mouse.justPressed, FlxG.mouse.justReleased))
-		{
-			offAll = false;
-		}
-		#end
-
 		// There is no reason to get into the loop if their is already a pointer on the analog
-		#if FLX_TOUCH
 		if (_currentTouch != null)
 		{
 			_tempTouches.push(_currentTouch);
@@ -263,9 +237,9 @@ class FlxJoyStick extends FlxSpriteGroup
 
 		for (touch in _tempTouches)
 		{
-			_point = touch.getWorldPosition(FlxG.camera, _point);
+			_point.set(touch.screenX, touch.screenY);
 
-			if (!updateAnalog(_point, touch.pressed, touch.justPressed, touch.justReleased, touch))
+			if (!updateAnalog(_point, touch.pressed, touch.justPressed, touch.justReleased))
 			{
 				offAll = false;
 				break;
@@ -288,40 +262,28 @@ class FlxJoyStick extends FlxSpriteGroup
 		thumb.y = y + Math.sin(_direction) * _amount * _radius - (thumb.height * 0.5);
 
 		if (offAll)
-		{
 			status = NORMAL;
-		}
 
-		#if FLX_TOUCH
 		_tempTouches.splice(0, _tempTouches.length);
-		#end
 
-		if (_direction >= -2.01 && _direction <= -1.12 && _amount >= 0.22){
+		if (_direction >= -2.01 && _direction <= -1.12 && _amount >= 0.22)
 			__dir = 'Up';
-		}
-		else if (_direction >= -1.11 && _direction <= -0.35 && _amount >= 0.22){
+		else if (_direction >= -1.11 && _direction <= -0.35 && _amount >= 0.22)
 			__dir = 'Up Right';
-		}
-		else if (_direction >= -0.34 && _direction <= 0.37 && _amount >= 0.22){
+		else if (_direction >= -0.34 && _direction <= 0.37 && _amount >= 0.22)
 			__dir = 'Right';
-		}
-		else if (_direction >= 0.38 && _direction <= 1.08 && _amount >= 0.22){
+		else if (_direction >= 0.38 && _direction <= 1.08 && _amount >= 0.22)
 			__dir = 'Down Right';
-		}
-		else if (_direction >= 1.09 && _direction <= 1.94 && _amount >= 0.22){
+		else if (_direction >= 1.09 && _direction <= 1.94 && _amount >= 0.22)
 			__dir = 'Down';
-		}
-		else if (_direction >= 1.95 && _direction <= 2.69 && _amount >= 0.22){
+		else if (_direction >= 1.95 && _direction <= 2.69 && _amount >= 0.22)
 			__dir = 'Down Left';
-		}
-		else if (_direction >= 2.70 && _direction <= 3.14 && _amount >= 0.22 || _direction >= -3.12 && _direction <= -2.76 && _amount >= 0.22){
+		else if (_direction >= 2.70 && _direction <= 3.14 && _amount >= 0.22 || _direction >= -3.12 && _direction <= -2.76 && _amount >= 0.22)
 			__dir = 'Left';
-		}
-		else if (_direction >= -2.75 && _direction <= -2.02 && _amount >= 0.22){
+		else if (_direction >= -2.75 && _direction <= -2.02 && _amount >= 0.22)
 			__dir = 'Left Up';
-		} else {
-			__dir = 'none';
-		}
+		else
+			__dir = 'None';
 
 		super.update(elapsed);
 	}
@@ -330,28 +292,17 @@ class FlxJoyStick extends FlxSpriteGroup
 	{
 		var offAll:Bool = true;
 
-		#if FLX_TOUCH
-		// Use the touch to figure out the world position if it's passed in, as
-		// the screen coordinates passed in touchPoint are wrong
-		// if the control is used in a group, for example.
-		if (Touch != null)
-		{
-			TouchPoint.set(Touch.screenX, Touch.screenY);
-		}
-		#end
-
 		if (_zone.containsPoint(TouchPoint) || (status == PRESSED))
 		{
 			offAll = false;
 
 			if (Pressed)
 			{
-				#if FLX_TOUCH
 				if (Touch != null)
 				{
 					_currentTouch = Touch;
 				}
-				#end
+
 				status = PRESSED;
 
 				if (JustPressed)
@@ -388,9 +339,7 @@ class FlxJoyStick extends FlxSpriteGroup
 			}
 			else if (JustReleased && status == PRESSED)
 			{
-				#if FLX_TOUCH
 				_currentTouch = null;
-				#end
 
 				status = HIGHLIGHT;
 
@@ -441,16 +390,8 @@ class FlxJoyStick extends FlxSpriteGroup
 
 	function get_justPressed():Bool
 	{
-		#if FLX_MOUSE
-		return FlxG.mouse.justPressed && status == PRESSED;
-		#end
-
-		#if FLX_TOUCH
 		if (_currentTouch != null)
-		{
 			return _currentTouch.justPressed && status == PRESSED;
-		}
-		#end
 
 		return false;
 	}
@@ -462,33 +403,9 @@ class FlxJoyStick extends FlxSpriteGroup
 
 	function get_justReleased():Bool
 	{
-		#if FLX_MOUSE
-		return FlxG.mouse.justReleased && status == HIGHLIGHT;
-		#end
-
-		#if FLX_TOUCH
 		if (_currentTouch != null)
-		{
 			return _currentTouch.justReleased && status == HIGHLIGHT;
-		}
-		#end
 
 		return false;
-	}
-
-	override public function set_x(X:Float):Float
-	{
-		super.set_x(X);
-		createZone();
-
-		return X;
-	}
-
-	override public function set_y(Y:Float):Float
-	{
-		super.set_y(Y);
-		createZone();
-
-		return Y;
 	}
 }

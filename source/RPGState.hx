@@ -361,9 +361,6 @@ class RPGState extends MusicBeatState
 	{
 		// Create the joystick
 		joystick = new FlxJoyStick(200, FlxG.height - 200, 150, 0.1);
-		joystick.set_x(200);
-		joystick.set_y(FlxG.height - 200);
-		joystick.createZone();
 		joystick.alpha = 0.6;
 		add(joystick);
 	}

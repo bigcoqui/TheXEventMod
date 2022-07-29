@@ -40,12 +40,15 @@ class RPGBoyfriend extends FlxSprite
 		lastElapsed = elapsed;
 		FlxG.watch.addQuick("Deltatime", lastElapsed);
 		FlxG.watch.addQuick("X Speed", velocity.x);
+
+		#if !android
 		// Input polling
 		up = FlxG.keys.anyPressed([UP, W]);
 		down = FlxG.keys.anyPressed([DOWN, S]);
 		left = FlxG.keys.anyPressed([LEFT, A]);
 		right = FlxG.keys.anyPressed([RIGHT, D]);
 		space = FlxG.keys.anyJustPressed([SPACE]);
+		#end
 
 		// State machine
 		switch (currentState)
