@@ -55,6 +55,7 @@ class RPGState extends MusicBeatState
 	var joystick:FlxJoyStick;
 	#end
 
+
 	public var levelState:String = "relighted";
 
 	override public function create()
@@ -280,10 +281,53 @@ class RPGState extends MusicBeatState
 		#if android
 		if (player != null && joystick != null)
 		{
-			player.left = (joystick._dir == 'Left');
-			player.right = (joystick._dir == 'Right');
-			player.up = (joystick._dir == 'Up');
-			player.down = (joystick._dir == 'Down');
+			switch (joystick.__dir) {
+				case 'Left':
+					player.left = true;
+			        player.right = false;
+	        		player.up = false;
+		        	player.down = false;
+				case 'Right':
+					player.left = false;
+			        player.right = true;
+	        		player.up = false;
+		        	player.down = false;
+				case 'Down Right':
+					player.left = false;
+			        player.right = true;
+	        		player.up = false;
+		        	player.down = true;
+				case 'Down Left':	
+					player.left = true;
+			        player.right = false;
+	        		player.up = false;
+		        	player.down = true;	
+				case 'Down':
+					player.left = false;
+			        player.right = false;
+	        		player.up = false;
+		        	player.down = true;
+				case 'Left Up':
+					player.left = true;
+			        player.right = false;
+	        		player.up = true;
+		        	player.down = false;
+				case 'Up Right':	
+					player.left = false;
+			        player.right = true;
+	        		player.up = true;
+		        	player.down = false;
+				case 'Up':	
+					player.left = false;
+			        player.right = false;
+	        		player.up = true;
+		        	player.down = false;	
+				default:	
+					player.left = false;
+			        player.right = false;
+	        		player.up = false;
+		        	player.down = false;			
+			}
 		}
 		#end
 	}
@@ -316,7 +360,10 @@ class RPGState extends MusicBeatState
 	function CreateJoystick()
 	{
 		// Create the joystick
-		joystick = new FlxJoyStick(200, FlxG.height - 200, 300, 0.25);
+		joystick = new FlxJoyStick(200, FlxG.height - 200, 150, 0.1);
+		joystick.set_x(200);
+		joystick.set_y(FlxG.height - 200);
+		joystick.createZone();
 		joystick.alpha = 0.6;
 		add(joystick);
 	}
