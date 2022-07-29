@@ -42,6 +42,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	var _radius:Float = 0;
 	var _direction:Float = 0;
 	var _amount:Float = 0;
+	public var _dir:String = '';
 	var _ease:Float;
 
 	public function new(X:Float = 0, Y:Float = 0, Radius:Float = 0, Ease:Float = 0.25)
@@ -175,6 +176,33 @@ class FlxJoyStick extends FlxSpriteGroup
 			status = NORMAL;
 
 		_tempTouches.splice(0, _tempTouches.length);
+
+		if (_direction >= -2.01 && _direction <= -1.12 && _amount >= 0.22){
+			_dir = 'Up';
+		}
+		else if (_direction >= -1.11 && _direction <= -0.35 && _amount >= 0.22){
+			_dir = 'Up Right';
+		}
+		else if (_direction >= -0.34 && _direction <= 0.37 && _amount >= 0.22){
+			_dir = 'Right';
+		}
+		else if (_direction >= 0.38 && _direction <= 1.08 && _amount >= 0.22){
+			_dir = 'Down Right';
+		}
+		else if (_direction >= 1.09 && _direction <= 1.94 && _amount >= 0.22){
+			_dir = 'Down';
+		}
+		else if (_direction >= 1.95 && _direction <= 2.69 && _amount >= 0.22){
+			_dir = 'Down Left';
+		}
+		else if (_direction >= 2.70 && _direction <= 3.14 && _amount >= 0.22 || _direction >= -3.12 && _direction <= -2.76 && _amount >= 0.22){
+			_dir = 'Left';
+		}
+		else if (_direction >= -2.75 && _direction <= -2.02 && _amount >= 0.22){
+			_dir = 'Left Up';
+		} else {
+			_dir = 'none';
+		}
 
 		super.update(elapsed);
 	}
