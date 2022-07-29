@@ -132,7 +132,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	/**
 	 * Creates the background of the analog stick.
 	 */
-	function createBase(?Graphic:FlxGraphicAsset):Void
+	function createBase():Void
 	{
 		base = new FlxSprite(0,
 			0).loadGraphic(FlxGraphic.fromFrame(FlxAtlasFrames.fromSparrow(Assets.getBitmapData('assets/android/joystick.png'),
@@ -154,7 +154,7 @@ class FlxJoyStick extends FlxSpriteGroup
 	/**
 	 * Creates the thumb of the analog stick.
 	 */
-	function createThumb(?Graphic:FlxGraphicAsset):Void
+	function createThumb():Void
 	{
 		thumb = new FlxSprite(0,
 			0).loadGraphic(FlxGraphic.fromFrame(FlxAtlasFrames.fromSparrow(Assets.getBitmapData('assets/android/joystick.png'),
@@ -245,7 +245,6 @@ class FlxJoyStick extends FlxSpriteGroup
 				break;
 			}
 		}
-		#end
 
 		if ((status == HIGHLIGHT || status == NORMAL) && _amount != 0)
 		{
@@ -407,5 +406,21 @@ class FlxJoyStick extends FlxSpriteGroup
 			return _currentTouch.justReleased && status == HIGHLIGHT;
 
 		return false;
+	}
+
+	override public function set_x(X:Float):Float
+	{
+		super.set_x(X);
+		createZone();
+
+		return X;
+	}
+
+	override public function set_y(Y:Float):Float
+	{
+		super.set_y(Y);
+		createZone();
+
+		return Y;
 	}
 }
